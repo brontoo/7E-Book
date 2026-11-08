@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#f5f1e9" />
+  <title>The Seven Emirates — Interactive Full HD | Hand Gestures</title>
+  <meta name="description" content="Seven original 1080p paper-crafted Emirates films in one frame-accurate, gesture-controlled interactive journey." />
+  <link rel="preload" href="frames/01-AD/f_0000.webp" as="image" type="image/webp" />
+  <style>
+    :root{--bg:#f5f1e9;--paper:#fffaf2;--ink:#273b33;--sub:#756f65;--border:#dcd2c2;--gold:#a77f4f;--dark:#23443a;--shadow:0 22px 70px rgba(51,45,33,.095)}
+    *{box-sizing:border-box}
+    html,body{margin:0;min-height:100%;background:var(--bg);color:var(--ink)}
+    body{font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
+    button,input{font:inherit}
+    button{cursor:pointer}
+    .shell{width:min(1400px,calc(100% - 54px));margin:auto;padding:27px 0 25px}
+    .top{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-bottom:19px}
+    .eyebrow{font-size:10px;letter-spacing:.29em;font-weight:800;color:var(--gold);margin-bottom:9px}
+    .top h1{font-family:Georgia,"Times New Roman",serif;font-weight:400;letter-spacing:-.045em;font-size:clamp(30px,4.2vw,58px);line-height:1.08;margin:0}
+    .intro{margin:8px 0 0;color:var(--sub);font-size:13px;letter-spacing:.005em}
+    .meta{text-align:right;min-width:180px}
+    .meta small{display:block;font-size:10px;letter-spacing:.2em;color:var(--gold);font-weight:800;margin-bottom:7px}
+    .meta strong{font-family:Georgia,"Times New Roman",serif;font-weight:400;font-size:25px}
+    .viewportWrap{position:relative;padding:10px;border:1px solid var(--border);background:var(--paper);border-radius:18px;box-shadow:var(--shadow)}
+    .viewport{position:relative;aspect-ratio:16/9;overflow:hidden;background:#eeedf0 url('frames/01-AD/f_0000.webp') center/100% 100% no-repeat;border-radius:11px;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none}
+    .viewport.isDragging{cursor:grabbing}
+    canvas{width:100%;height:100%;display:block;pointer-events:none}
+    .stagePill{position:absolute;top:19px;left:20px;display:flex;align-items:center;gap:9px;padding:9px 12px;background:rgba(255,253,248,.92);border:1px solid rgba(128,116,94,.15);border-radius:100px;font-size:11px;font-weight:700;color:#395247;backdrop-filter:blur(6px);pointer-events:none}
+    .stagePill:before{content:"";width:7px;height:7px;border-radius:100%;background:#b99765}
+    .dragHint{position:absolute;bottom:15px;left:50%;transform:translateX(-50%);padding:9px 15px;background:rgba(34,44,37,.8);border:1px solid rgba(255,255,255,.15);border-radius:999px;color:white;font-weight:650;letter-spacing:.03em;font-size:11px;white-space:nowrap;pointer-events:none;transition:opacity .3s}
+    .viewport.used .dragHint{opacity:0}
+    .loading{position:absolute;inset:0;display:grid;place-items:center;background:rgba(251,248,242,.93);transition:opacity .25s;z-index:5}
+    .loading.hidden{opacity:0;pointer-events:none}
+    .loadCenter{text-align:center;padding:20px}
+    .spinner{width:34px;height:34px;margin:auto auto 17px;border:3px solid #e2d6c4;border-top-color:#9a794f;border-radius:50%;animation:spin .75s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .loadCenter p{font-size:12px;letter-spacing:.04em;color:#756c61}
+    .controls{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:21px;align-items:center;margin-top:16px;padding:17px 19px;border:1px solid var(--border);border-radius:15px;background:var(--paper)}
+    .controlTop{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
+    .controlTop .label{font-weight:750;font-size:11px;letter-spacing:.12em;text-transform:uppercase}
+    .reading{font-size:11px;color:var(--sub);font-variant-numeric:tabular-nums}
+    input[type=range]{width:100%;margin:0;appearance:none;-webkit-appearance:none;height:5px;border-radius:5px;background:linear-gradient(to right,var(--gold) 0%,var(--gold) var(--progress,0%),#e4ddd4 var(--progress,0%),#e4ddd4 100%);cursor:pointer;touch-action:pan-y}
+    input[type=range]::-webkit-slider-thumb{appearance:none;width:18px;height:18px;background:var(--dark);border:3px solid #fff;border-radius:50%;box-shadow:0 1px 6px #8885}
+    input[type=range]::-moz-range-thumb{width:12px;height:12px;background:var(--dark);border:3px solid #fff;border-radius:50%;box-shadow:0 1px 6px #8885}
+    .nav{display:flex;gap:8px}
+    .nav button{display:inline-flex;align-items:center;justify-content:center;min-width:42px;height:42px;border-radius:12px;border:1px solid #c9bda9;background:#f5efe5;color:var(--dark);font-size:17px}
+    .nav button:hover{background:#e9ddcc}
+    .nav button:disabled{opacity:.28;cursor:not-allowed}
+    .chapters{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:5px;margin-top:16px}
+    .chapter{padding:11px 4px 8px;background:transparent;border:1px solid transparent;border-radius:11px;transition:background .15s,border-color .15s;text-align:center;color:var(--sub)}
+    .chapter:hover{background:rgba(255,255,255,.67)}
+    .chapter.active{background:#fffaf2;border-color:#d6c3a8;color:var(--dark)}
+    .chapter .dot{display:block;width:9px;height:9px;border-radius:50%;border:1.5px solid #af9c81;background:var(--bg);margin:0 auto 9px}
+    .chapter.active .dot{background:var(--gold);border-color:var(--gold);box-shadow:0 0 0 4px #a77f4f22}
+    .chapter .chapterName{display:block;font-size:11px;font-weight:750;line-height:1.3}
+    .chapter .chapterIndex{display:block;font-size:9px;letter-spacing:.1em;margin-top:3px;opacity:.74}
+    .foot{display:flex;gap:20px;justify-content:space-between;align-items:center;margin-top:17px;color:var(--sub);font-size:11px;line-height:1.5}
+    .foot strong{color:var(--dark)}
+    .foot a{color:var(--dark);text-decoration:underline;text-underline-offset:3px}
+    .kbd{border:1px solid #cabfae;border-radius:4px;padding:2px 5px;font-size:10px;background:#fffaf4}
+    @media (max-width:780px){
+      .shell{width:min(100% - 24px,680px);padding-top:18px}
+      .top{align-items:flex-start}.meta{min-width:0}.meta strong{font-size:17px}.meta small{font-size:8px}.intro{font-size:11px}
+      .viewportWrap{padding:5px;border-radius:13px}.viewport{border-radius:9px}.stagePill{left:8px;top:8px;font-size:9px;padding:6px 8px}.dragHint{bottom:7px;font-size:9px;padding:6px 9px}
+      .controls{grid-template-columns:1fr auto;gap:10px;padding:12px;margin-top:10px}
+      .nav button{min-width:36px;height:36px;border-radius:9px}
+      .chapters{display:flex;overflow-x:auto;gap:6px;margin-top:11px;padding-bottom:7px;scrollbar-width:thin}
+      .chapter{min-width:105px;padding:8px 9px}.foot{display:block;margin-top:8px}.foot span:last-child{display:none}
+    }
+  </style>
+  <link rel="stylesheet" href="gesture.css" />
+  <style>
+    .qualityBadge{position:absolute;top:16px;right:16px;background:rgba(29,51,43,.83);color:#fff;padding:7px 11px;border:1px solid rgba(255,255,255,.12);border-radius:999px;font-size:10px;font-weight:800;letter-spacing:.09em;z-index:2;pointer-events:none;backdrop-filter:blur(8px)}
+    .qualityBadge span{opacity:.55;padding:0 4px}
+    .subLabel{font-weight:600;color:var(--gold);letter-spacing:.03em;text-transform:none}
+    .filmMeta{display:flex;justify-content:space-between;align-items:center;gap:15px;font-size:10px;letter-spacing:.07em;color:#7c786f;margin:12px 3px 0}
+    .filmMeta strong{font-variant-numeric:tabular-nums;font-weight:750;color:#2f5146}
+    .metaSep{color:#c4b7a5;padding:0 7px}
+    .loading{z-index:8}
+    @media(max-width:780px){.qualityBadge{right:8px;top:8px;font-size:8px;padding:5px 7px}.filmMeta{font-size:9px}.subLabel{display:none}.dragHint{max-width:95%;font-size:8px}}
+  </style>
+
+</head>
+<body>
+<main class="shell">
+  <header class="top">
+    <div>
+      <div class="eyebrow">A PAPER-ENGINEERED JOURNEY</div>
+      <h1>The Seven Emirates</h1>
+      <p class="intro">An interactive pop-up journey across the United Arab Emirates</p>
+    </div>
+    <div class="meta" aria-live="polite"><small>CURRENT CHAPTER</small><strong id="chapterTitle">The Cover</strong></div>
+  </header>
+  <aside class="gestureBar" aria-label="Camera gesture controls">
+    <div class="gestureActions">
+      <button type="button" id="gestureToggle" class="gestureBtn" aria-pressed="false">✦  Enable hand controls</button>
+      <span class="gestureIndicator" id="gestureIndicator" aria-hidden="true"></span>
+      <span id="gestureStatus" class="gestureStatus" role="status" aria-live="polite">Camera off · mouse and touch available</span>
+    </div>
+    <details class="gestureHelp"><summary>How to use hand gestures</summary><p><b>✊ Fist:</b> move left to advance / right to rewind · <b>☝️ Point:</b> move the blue on-screen cursor · <b>👌 Pinch:</b> select a chapter or button. Camera is optional; disable it at any time. Requires HTTPS or localhost.</p></details>
+  </aside>
+  <section class="viewportWrap" aria-label="Drag-controlled pop-up book video">
+    <div class="viewport" id="viewport" tabindex="0" role="slider" aria-label="Book timeline. Drag left to move forward and right to move backward" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-valuetext="Closed book">
+      <canvas id="bookCanvas" width="1920" height="1080" aria-hidden="true"></canvas>
+      <div class="qualityBadge" aria-hidden="true">1080p <span>·</span> ORIGINAL MOTION <span>·</span> 24 FPS</div>
+      <div class="stagePill"><span id="pillText">THE COVER · CLOSED BOOK</span></div>
+      <div class="dragHint">← DRAG LEFT TO TURN THE PAGES · RIGHT TO GO BACK →</div>
+      <div class="gestureCam" id="gestureCam" aria-hidden="true">
+        <video id="gestureVideo" autoplay muted playsinline aria-hidden="true"></video>
+        <canvas id="gestureSkeleton" width="320" height="240" aria-hidden="true"></canvas>
+        <span class="gestureCamLabel">LIVE HAND TRACKING</span>
+        <span class="gestureCamBadge" id="gestureCamBadge">Waiting for camera…</span>
+      </div>
+      <div class="gestureToast" id="gestureToast" aria-live="polite"></div>
+      <div id="loading" class="loading"><div class="loadCenter"><div class="spinner"></div><p>Loading the first Full HD frame…</p></div></div>
+    </div>
+  </section>
+  <section class="controls" aria-label="Book controls">
+    <div>
+      <div class="controlTop"><span class="label">Turn the pages <span class="subLabel">· 7 Original Films</span></span><span class="reading" id="readout">0% · 0.00s / 69.71s</span></div>
+      <input id="scrubber" type="range" min="0" max="1672" step="1" value="0" aria-label="Book position" />
+    </div>
+    <div class="nav" aria-label="Chapter navigation">
+      <button id="prev" title="Previous emirate" aria-label="Previous emirate">←</button>
+      <button id="next" title="Next emirate" aria-label="Next emirate">→</button>
+    </div>
+  </section>
+  <div class="filmMeta"><span id="playerState">Preparing frames…</span><span>CLIP <strong id="clipIndicator">01 / 07</strong> <span class="metaSep">|</span> FRAME <strong id="frameCounter">0001 / 1673</strong></span></div>
+  <nav class="chapters" id="chapters" aria-label="Journey chapters"></nav>
+  <footer class="foot"><span><strong>Turn the pages with gestures.</strong> All landmark and vehicle animation is built into the original seven videos. Pause or reverse on any frame.</span><span><span class="kbd">←</span> <span class="kbd">→</span> Keyboard navigation</span></footer>
+</main>
+<div id="gesturePointer" class="gesturePointer" aria-hidden="true"></div>
+<script src="app.js" defer></script>
+
+<script src="gesture-controller.mjs" type="module"></script>
+</body>
+</html>

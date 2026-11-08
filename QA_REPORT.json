@@ -1,0 +1,94 @@
+{
+  "source_videos": 7,
+  "resolution": "1920x1080",
+  "fps": 24,
+  "total_frames": 1673,
+  "seconds": 69.708,
+  "compressed_frames_total_bytes": 263968706,
+  "average_frame_kb": 154.1,
+  "clips": [
+    {
+      "index": 1,
+      "id": "01-AD",
+      "name": "Abu Dhabi",
+      "frames": 239,
+      "first_global_frame": 0,
+      "last_global_frame": 238,
+      "resolution": "1920x1080",
+      "fps": 24,
+      "compressed_bytes": 34259206
+    },
+    {
+      "index": 2,
+      "id": "02-DXB",
+      "name": "Dubai",
+      "frames": 239,
+      "first_global_frame": 239,
+      "last_global_frame": 477,
+      "resolution": "1920x1080",
+      "fps": 24,
+      "compressed_bytes": 30899252
+    },
+    {
+      "index": 3,
+      "id": "03-SHJ",
+      "name": "Sharjah",
+      "frames": 239,
+      "first_global_frame": 478,
+      "last_global_frame": 716,
+      "resolution": "1920x1080",
+      "fps": 24,
+      "compressed_bytes": 37435784
+    },
+    {
+      "index": 4,
+      "id": "04-AJ",
+      "name": "Ajman",
+      "frames": 239,
+      "first_global_frame": 717,
+      "last_global_frame": 955,
+      "resolution": "1920x1080",
+      "fps": 24,
+      "compressed_bytes": 34062964
+    },
+    {
+      "index": 5,
+      "id": "05-UMQ",
+      "name": "Umm Al Quwain",
+      "frames": 239,
+      "first_global_frame": 956,
+      "last_global_frame": 1194,
+      "resolution": "1920x1080",
+      "fps": 24,
+      "compressed_bytes": 33737214
+    },
+    {
+      "index": 6,
+      "id": "06-RAK",
+      "name": "Ras Al Khaimah",
+      "frames": 239,
+      "first_global_frame": 1195,
+      "last_global_frame": 1433,
+      "resolution": "1920x1080",
+      "fps": 24,
+      "compressed_bytes": 45445856
+    },
+    {
+      "index": 7,
+      "id": "07-FUJ",
+      "name": "Fujairah",
+      "frames": 239,
+      "first_global_frame": 1434,
+      "last_global_frame": 1672,
+      "resolution": "1920x1080",
+      "fps": 24,
+      "compressed_bytes": 48128430
+    }
+  ],
+  "tests": {
+    "gesture_logic": "13/13 passed",
+    "engine_mapping": "passed",
+    "actual_webcam": "not tested in build environment",
+    "browser_integration": "blocked by browser runtime policy"
+  }
+}

@@ -1,0 +1,29 @@
+/* Optional hand-gesture layer: keeps the underlying frame viewer unchanged. */
+.gestureBar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:13px;margin:-1px 0 15px;padding:11px 13px;border:1px solid var(--border);border-radius:13px;background:rgba(255,252,246,.85)}
+.gestureActions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.gestureBtn{display:inline-flex;gap:9px;align-items:center;justify-content:center;border:1px solid #9a8260;background:#2b493e;color:#fff;padding:11px 16px;border-radius:10px;font-size:12px;font-weight:750;letter-spacing:.015em;min-height:40px}
+.gestureBtn:hover{background:#375b4d}
+.gestureBtn.isOn{background:#eee4d5;color:#3b443a;border-color:#c9bba8}
+.gestureIndicator{height:8px;width:8px;border-radius:50%;background:#b6a993;box-shadow:0 0 0 4px rgba(185,168,140,.17)}
+.gestureIndicator.on{background:#2ba57d;box-shadow:0 0 0 4px rgba(43,165,125,.12)}
+.gestureStatus{font-size:12px;color:#5f695c;font-weight:550}
+.gestureStatus[data-state="error"]{color:#a23e33}
+.gestureStatus[data-state="active"]{color:#2b735a}
+.gestureHelp{margin-left:auto;max-width:720px;color:#756c60;font-size:11px;line-height:1.6}
+.gestureHelp summary{cursor:pointer;font-weight:700;color:#5b564b;list-style:none}
+.gestureHelp summary::-webkit-details-marker{display:none}
+.gestureHelp summary:before{content:"ⓘ";margin-right:6px;color:#9c805e}
+.gestureHelp p{margin:6px 0 0}
+.gestureCam{position:absolute;right:13px;bottom:13px;width:clamp(150px,22%,256px);aspect-ratio:4/3;border-radius:12px;z-index:6;overflow:hidden;background:#1e2829;box-shadow:0 13px 35px rgba(5,19,19,.35);border:1px solid rgba(255,255,255,.25);pointer-events:none;display:none}
+.gestureCam.active{display:block}
+.gestureCam video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;transform:scaleX(-1);opacity:.78}
+.gestureCam canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.gestureCamLabel{position:absolute;left:8px;top:8px;z-index:2;background:rgba(15,30,27,.7);color:#fff;padding:5px 7px;font-size:9px;letter-spacing:.06em;border-radius:5px;font-weight:650}
+.gestureCamBadge{position:absolute;left:8px;bottom:7px;right:8px;z-index:2;color:white;text-shadow:0 1px 4px #121615;font-size:10px;font-weight:600;letter-spacing:.02em}
+.gesturePointer{position:fixed;width:23px;height:23px;border-radius:50%;border:2px solid #f6fafe;background:rgba(37,138,235,.25);box-shadow:0 0 0 7px rgba(44,133,214,.14),0 0 18px rgba(42,140,252,.35);transform:translate(-50%,-50%);z-index:2147483000;pointer-events:none;display:none;transition:background .08s,border-color .08s}
+.gesturePointer.visible{display:block}
+.gesturePointer.isPinching{background:#279edb;border-color:#fff;box-shadow:0 0 0 12px rgba(42,151,229,.2),0 0 18px rgba(43,145,255,.45)}
+.gestureToast{position:absolute;top:18px;right:18px;z-index:7;pointer-events:none;display:none;max-width:45%;background:rgba(19,41,35,.86);color:#fff;font-size:12px;line-height:1.5;padding:9px 13px;border:1px solid #ffffff33;border-radius:9px;backdrop-filter:blur(8px)}
+.gestureToast.visible{display:block}
+.gestureCam[hidden],.gesturePointer[hidden]{display:none!important}
+@media(max-width:780px){.gestureBar{padding:10px;margin-bottom:10px}.gestureHelp{max-width:none;width:100%;margin-left:0}.gestureBtn{padding:9px 12px}.gestureStatus{font-size:11px}.gestureCam{width:155px;right:7px;bottom:7px}.gestureToast{top:9px;right:9px;font-size:10px}}
