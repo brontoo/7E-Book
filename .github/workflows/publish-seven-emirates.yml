@@ -1,0 +1,174 @@
+name: Publish Seven Emirates media
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: seven-emirates-7e-1bc718ef5e77
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.event_name == 'workflow_dispatch' && github.repository == 'brontoo/7E-Book' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    environment: seven-emirates-publishing
+    defaults:
+      run:
+        shell: bash
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+      SOURCE_COMMIT: 1bc718ef5e770033a3f00f398223abce01052fb1
+      EXPO_EXPECTED_COMMIT: cc02f5deb4072561ecaf771e6ff7471f42371d90
+      SEVEN_EMIRATES_SUPABASE_URL: https://hjqyhybgitdizfhwpdcv.supabase.co
+      SEVEN_EMIRATES_BUCKET: seven-emirates-game
+    steps:
+      - name: Check out the reviewed Expo integration branch
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          repository: brontoo/tomorrows-earth-expo
+          ref: integration/seven-emirates-frame-engine
+          path: expo
+          persist-credentials: false
+          token: ${{ secrets.EXPO_REPOSITORY_READ_TOKEN || github.token }}
+
+      - name: Refuse an unexpected publisher revision
+        run: |
+          python3 - <<'PY'
+          import os, subprocess
+          actual = subprocess.check_output(['git', '-C', 'expo', 'rev-parse', 'HEAD'], text=True).strip()
+          if actual != os.environ['EXPO_EXPECTED_COMMIT']:
+              raise SystemExit('Expo branch advanced: review and update EXPO_EXPECTED_COMMIT before publishing.')
+          print('Reviewed Expo publisher commit:', actual)
+          PY
+
+      - name: Check out media at the exact manifest provenance commit
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          repository: brontoo/7E-Book
+          ref: ${{ env.SOURCE_COMMIT }}
+          path: source
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.12'
+
+      - name: Install validation dependency
+        run: python -m pip install --disable-pip-version-check Pillow==13.0.0
+
+      - name: Run publisher and policy regression tests
+        working-directory: expo
+        run: python -m unittest discover -s scripts/media -p 'test_*.py'
+
+      - name: Assemble and verify all 1673 unchanged source frames
+        working-directory: expo
+        run: |
+          mkdir -p "$RUNNER_TEMP/seven-emirates-reports"
+          python scripts/media/assemble_actions_media.py \
+            --source "$GITHUB_WORKSPACE/source" \
+            --manifest media/seven-emirates/manifest.json \
+            --output "$RUNNER_TEMP/seven-emirates-prepared" \
+            > "$RUNNER_TEMP/seven-emirates-reports/integrity.json"
+          cat "$RUNNER_TEMP/seven-emirates-reports/integrity.json"
+
+      - name: Verify authenticated Storage connectivity and public bucket
+        working-directory: expo
+        env:
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          python scripts/media/check_publish_prerequisites.py \
+            --report "$RUNNER_TEMP/seven-emirates-reports/connection.json"
+
+      - name: Install PostgreSQL policy inspection client
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends postgresql-client
+
+      - name: Prove anonymous and student writes are blocked without changing policies
+        working-directory: expo
+        env:
+          SUPABASE_POLICY_DATABASE_URL: ${{ secrets.SUPABASE_POLICY_DATABASE_URL }}
+        run: |
+          python scripts/media/audit_storage_policy.py \
+            --report "$RUNNER_TEMP/seven-emirates-reports/policy-audit.json"
+
+      - name: Publish immutable frames and manifest last with full remote verification
+        working-directory: expo
+        env:
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          python scripts/media/publish_supabase.py \
+            --root "$RUNNER_TEMP/seven-emirates-prepared" \
+            --project https://hjqyhybgitdizfhwpdcv.supabase.co \
+            --bucket seven-emirates-game --apply --workers 3 \
+            --checkpoint "$RUNNER_TEMP/seven-emirates-reports/checkpoint.json" \
+            --report "$RUNNER_TEMP/seven-emirates-reports/publication.json"
+
+      - name: Verify public manifest and all chapter boundary samples including CORS
+        working-directory: expo
+        run: |
+          python scripts/media/verify_public_delivery.py \
+            --manifest "$RUNNER_TEMP/seven-emirates-prepared/manifest.json" \
+            --report "$RUNNER_TEMP/seven-emirates-reports/public-verification.json"
+
+      - name: Set up Node for the actual client resolver check
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+
+      - name: Install pinned client dependencies and browser
+        working-directory: expo
+        run: |
+          corepack pnpm install --frozen-lockfile
+          python -m pip install --disable-pip-version-check playwright==1.62.0
+          python -m playwright install --with-deps chromium
+
+      - name: Execute the actual public client resolver and native frame decoder
+        working-directory: expo
+        run: |
+          corepack pnpm exec esbuild scripts/media/public_probe_entry.ts \
+            --bundle --platform=browser --format=esm \
+            --outfile="$RUNNER_TEMP/seven-emirates-public-probe.js"
+          python scripts/media/probe_public_client.py \
+            --bundle "$RUNNER_TEMP/seven-emirates-public-probe.js" \
+            --manifest "$RUNNER_TEMP/seven-emirates-prepared/manifest.json" \
+            --report "$RUNNER_TEMP/seven-emirates-reports/public-client.json"
+
+      - name: Record verified publication summary
+        run: |
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          root = Path(os.environ['RUNNER_TEMP']) / 'seven-emirates-reports'
+          publication = json.loads((root / 'publication.json').read_text())
+          client = json.loads((root / 'public-client.json').read_text())
+          if publication['verifiedTotal'] != 1674 or client.get('remoteVerified') is not True:
+              raise SystemExit('Publication acceptance checks did not pass.')
+          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as summary:
+              summary.write('## Verified Seven Emirates publication\n\n')
+              summary.write(f"Uploaded: {publication['uploaded']}\n\nAlready verified: {publication['alreadyVerified']}\n\nTotal verified: {publication['verifiedTotal']}\n\n")
+              summary.write(f"Manifest: {publication['manifestUrl']}\n\nNo Expo deployment or engine activation was performed.\n")
+          PY
+
+      - name: Retain only credential-free reports and resumable checkpoint
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: seven-emirates-publication-${{ github.run_id }}
+          retention-days: 7
+          if-no-files-found: ignore
+          path: |
+            ${{ runner.temp }}/seven-emirates-reports/integrity.json
+            ${{ runner.temp }}/seven-emirates-reports/connection.json
+            ${{ runner.temp }}/seven-emirates-reports/policy-audit.json
+            ${{ runner.temp }}/seven-emirates-reports/checkpoint.json
+            ${{ runner.temp }}/seven-emirates-reports/publication.json
+            ${{ runner.temp }}/seven-emirates-reports/public-verification.json
+            ${{ runner.temp }}/seven-emirates-reports/public-client.json
