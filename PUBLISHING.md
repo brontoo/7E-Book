@@ -11,6 +11,9 @@ self-review where supported, and permit only `main`. Add environment secrets:
 - `SUPABASE_POLICY_DATABASE_URL`: a verified-TLS, read-only PostgreSQL connection
   to the same Supabase project's policy catalogs, preferably the IPv4-compatible
   Session Pooler URL from the dashboard.
+- Optional `SUPABASE_POLICY_CA_CERT`: complete PEM CA certificate downloaded
+  from this project dashboard, if the audit reports `tls-verification`. The audit
+  adds it to system trust in a temporary file and retains `verify-full`.
 - `SUPABASE_SERVICE_ROLE_KEY`: only as a legacy service-role JWT alternative.
 - `EXPO_REPOSITORY_READ_TOKEN`: only if Expo is private; fine-grained Contents:
   read access to that repository only. It must not have write/admin access.
@@ -25,12 +28,12 @@ The job does not create buckets or change storage policies. Its read-only audit
 must prove client INSERT/UPDATE/DELETE are denied. The full setup and conservative
 policy-audit contract, along with the Windows alternative, are documented here:
 
-[Pinned Expo publishing guide](https://github.com/brontoo/tomorrows-earth-expo/blob/cc02f5deb4072561ecaf771e6ff7471f42371d90/docs/github-actions-media-publishing.md)
+[Pinned Expo publishing guide](https://github.com/brontoo/tomorrows-earth-expo/blob/2215b67324a1bc46f5e93fa86744cfe2aac5d361/docs/github-actions-media-publishing.md)
 
 Reviewed immutable inputs:
 
 - Source frames: commit `1bc718ef5e770033a3f00f398223abce01052fb1`.
-- Expo integration publisher: commit `cc02f5deb4072561ecaf771e6ff7471f42371d90`.
+- Expo integration publisher: commit `2215b67324a1bc46f5e93fa86744cfe2aac5d361`.
 - Media version: `7e-1bc718ef5e77`.
 - Exact manifest SHA-256:
   `96e7635ce959133c36268b0028474f0737932af5dd498977e7a5d1b69a34d11f`.

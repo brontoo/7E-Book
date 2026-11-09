@@ -22,7 +22,7 @@ jobs:
     env:
       PYTHONDONTWRITEBYTECODE: '1'
       SOURCE_COMMIT: 1bc718ef5e770033a3f00f398223abce01052fb1
-      EXPO_EXPECTED_COMMIT: cc02f5deb4072561ecaf771e6ff7471f42371d90
+      EXPO_EXPECTED_COMMIT: 2215b67324a1bc46f5e93fa86744cfe2aac5d361
       SEVEN_EMIRATES_SUPABASE_URL: https://hjqyhybgitdizfhwpdcv.supabase.co
       SEVEN_EMIRATES_BUCKET: seven-emirates-game
     steps:
@@ -124,6 +124,8 @@ jobs:
         working-directory: expo
         env:
           SUPABASE_POLICY_DATABASE_URL: ${{ secrets.SUPABASE_POLICY_DATABASE_URL }}
+          # Optional PEM CA from this project dashboard; hostname checks stay enabled.
+          SUPABASE_POLICY_CA_CERT: ${{ secrets.SUPABASE_POLICY_CA_CERT }}
         run: |
           python scripts/media/audit_storage_policy.py \
             --report "$RUNNER_TEMP/seven-emirates-reports/policy-audit.json"
