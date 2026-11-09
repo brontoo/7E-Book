@@ -1,0 +1,141 @@
+name: Accept Seven Emirates real media
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: seven-emirates-read-only-acceptance
+  cancel-in-progress: false
+
+jobs:
+  accept:
+    if: github.event_name == 'workflow_dispatch' && github.repository == 'brontoo/7E-Book' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    environment: seven-emirates-qa
+    defaults:
+      run:
+        shell: bash
+    env:
+      EXPO_COMMIT: 07f4e1fe9ade229efdaf3bfc4b026cba917801b6
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - name: Check out only the acceptance tools from this workflow commit
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.sha }}
+          path: qa
+          submodules: false
+          persist-credentials: false
+          sparse-checkout: acceptance
+          sparse-checkout-cone-mode: true
+
+      - name: Check out reviewed Expo commit without submodule traversal
+        env:
+          EXPO_READ_TOKEN: ${{ secrets.EXPO_REPOSITORY_READ_TOKEN || github.token }}
+        run: |
+          python3 - <<'PY'
+          import base64, os, subprocess
+          from pathlib import Path
+          def git(*args, env=None):
+              subprocess.run(['git', *args], check=True, env=env)
+          git('init', 'expo')
+          git('-C', 'expo', 'remote', 'add', 'origin', 'https://github.com/brontoo/tomorrows-earth-expo.git')
+          git('-C', 'expo', 'sparse-checkout', 'set', '--cone',
+              'api', 'client', 'docs', 'drizzle', 'media', 'patches', 'scripts', 'server', 'shared')
+          env = os.environ.copy()
+          header = base64.b64encode(('x-access-token:' + env.pop('EXPO_READ_TOKEN')).encode()).decode()
+          env.update(GIT_TERMINAL_PROMPT='0', GIT_CONFIG_COUNT='1',
+                     GIT_CONFIG_KEY_0='http.https://github.com/.extraheader',
+                     GIT_CONFIG_VALUE_0='AUTHORIZATION: basic ' + header)
+          git('-C', 'expo', '-c', 'submodule.recurse=false', 'fetch', '--no-recurse-submodules',
+              '--depth=1', 'origin', os.environ['EXPO_COMMIT'], env=env)
+          git('-C', 'expo', 'checkout', '--no-recurse-submodules', '--detach', 'FETCH_HEAD')
+          # Omit only the empty runner-local stub. No committed reference is removed.
+          stub = Path('expo/everything-claude-code')
+          if stub.exists(): stub.rmdir()
+          git('-C', 'expo', 'update-index', '--skip-worktree', '--', 'everything-claude-code')
+          actual = subprocess.check_output(['git', '-C', 'expo', 'rev-parse', 'HEAD'], text=True).strip()
+          if actual != os.environ['EXPO_COMMIT']: raise SystemExit('Unexpected Expo commit')
+          print('Reviewed Expo commit:', actual)
+          PY
+
+      - name: Set up Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+
+      - name: Set up Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.12'
+
+      - name: Install locked application and browser dependencies
+        working-directory: expo
+        run: |
+          corepack pnpm install --frozen-lockfile
+          python -m pip install --disable-pip-version-check playwright==1.62.0
+          python -m playwright install --with-deps chromium
+          python -m unittest discover -s ../qa/acceptance -p 'test_*.py'
+
+      - name: Start temporary localhost preview with public preview flags only
+        working-directory: expo
+        env:
+          VITE_BOOK_ENGINE: frames
+          VITE_BOOK_GESTURES: 'true'
+          VITE_BOOK_ASSET_BASE_URL: https://hjqyhybgitdizfhwpdcv.supabase.co/storage/v1/object/public/seven-emirates-game/
+          VITE_BOOK_MEDIA_VERSION: 7e-1bc718ef5e77
+        run: |
+          mkdir -p "$RUNNER_TEMP/seven-emirates-qa"
+          corepack pnpm exec vite --host 127.0.0.1 --port 4174 --strictPort > "$RUNNER_TEMP/seven-emirates-preview.log" 2>&1 &
+          echo "$!" > "$RUNNER_TEMP/seven-emirates-preview.pid"
+          python - <<'PY'
+          import time, urllib.request
+          for attempt in range(60):
+              try:
+                  with urllib.request.urlopen('http://127.0.0.1:4174', timeout=1) as response:
+                      if response.status == 200: break
+              except OSError: time.sleep(0.5)
+          else: raise SystemExit('Local preview did not become ready')
+          PY
+
+      - name: Run actual CDN and MediaPipe acceptance without media substitutions
+        run: |
+          python qa/acceptance/run-automated.py --app "$GITHUB_WORKSPACE/expo" \
+            --base-url http://127.0.0.1:4174 --report-dir "$RUNNER_TEMP/seven-emirates-qa"
+
+      - name: Summarize actual evidence and outstanding human acceptance
+        if: always()
+        run: |
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          root = Path(os.environ['RUNNER_TEMP']) / 'seven-emirates-qa'
+          summary = json.loads((root / 'summary.json').read_text()) if (root / 'summary.json').exists() else {'automatedPassed': False, 'error': 'Acceptance did not reach report generation'}
+          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as output:
+              output.write('## Seven Emirates read-only acceptance\n\n')
+              output.write('Reviewed Expo: `' + os.environ['EXPO_COMMIT'] + '`\n\n')
+              for key in ('automatedPassed','recordsVerified','boundarySamplesVerified','transitionsVerified','modelInitialized','originalModelStatus'):
+                  output.write(f"- {key}: {summary.get(key, 'not reached')}\n")
+              output.write('\nDownload the JSON reports for hashes, browser timings, limited memory metrics and actual failures.\n\n')
+              output.write('**Production NO-GO pending physical-camera and genuine nonproduction educational acceptance.** No publication, deployment, production flag change or media write occurred.\n')
+          PY
+
+      - name: Stop temporary preview
+        if: always()
+        run: |
+          if [ -f "$RUNNER_TEMP/seven-emirates-preview.pid" ]; then
+            kill "$(cat "$RUNNER_TEMP/seven-emirates-preview.pid")" 2>/dev/null || true
+          fi
+
+      - name: Retain credential-free JSON reports
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: seven-emirates-acceptance-${{ github.run_id }}
+          path: ${{ runner.temp }}/seven-emirates-qa/*.json
+          if-no-files-found: warn
+          retention-days: 14

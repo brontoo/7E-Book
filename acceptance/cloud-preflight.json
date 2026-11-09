@@ -1,0 +1,117 @@
+{
+  "scope": "Cloud preflight only; not a GitHub Actions or physical-camera result",
+  "reports": {
+    "manifest": {
+      "passed": false,
+      "recordsVerified": 0,
+      "error": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+    },
+    "models": {
+      "verified": false,
+      "sameBytes": null,
+      "sources": {
+        "pinned": {
+          "url": "https://storage.googleapis.com/mediapipe-models/gesture_recognizer/gesture_recognizer/float16/1/gesture_recognizer.task",
+          "error": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+        },
+        "prototype": {
+          "url": "https://storage.googleapis.com/mediapipe-tasks/gesture_recognizer/gesture_recognizer.task",
+          "error": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+        }
+      },
+      "requiresPhysicalComparison": true,
+      "modelVersionUnchanged": true
+    },
+    "performance": {
+      "passed": false,
+      "cameraRequests": 0,
+      "physicalTrackingMeasured": false,
+      "memoryScope": "CDP JS heap and DOM counters only; excludes total native/GPU/WASM memory",
+      "timings": {},
+      "memory": [
+        {
+          "stage": "projects-before-game",
+          "jsHeapUsedBytes": 8286360,
+          "jsHeapTotalBytes": 11452416,
+          "documents": 4,
+          "nodes": 68,
+          "jsEventListeners": 159
+        }
+      ],
+      "failures": [
+        "Locator expected to have attribute '238'"
+      ]
+    },
+    "browser": {
+      "remoteVerified": false,
+      "modelInitialized": false,
+      "physicalCameraVerified": false,
+      "syntheticVideoUsed": false,
+      "mediaOrModelMocked": false,
+      "authAndProgressFixtures": true,
+      "checks": [
+        "Projects initializes no camera, book media or recognizer"
+      ],
+      "failures": [
+        "Live media/app: Page.evaluate: TypeError: Failed to fetch",
+        "Actual model: Actual recognizer initialization failed; see modelAttempts/resources"
+      ],
+      "networkFailures": [
+        {
+          "url": "https://hjqyhybgitdizfhwpdcv.supabase.co/storage/v1/object/public/seven-emirates-game/7e-1bc718ef5e77/manifest.json",
+          "error": "net::ERR_TUNNEL_CONNECTION_FAILED"
+        },
+        {
+          "url": "https://hjqyhybgitdizfhwpdcv.supabase.co/storage/v1/object/public/seven-emirates-game/7e-1bc718ef5e77/manifest.json",
+          "error": "net::ERR_TUNNEL_CONNECTION_FAILED"
+        },
+        {
+          "url": "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.2.2/wasm/vision_wasm_internal.js",
+          "error": "net::ERR_CERT_AUTHORITY_INVALID"
+        },
+        {
+          "url": "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.2.2/wasm/vision_wasm_internal.js",
+          "error": "net::ERR_CERT_AUTHORITY_INVALID"
+        }
+      ],
+      "timings": {},
+      "chapterRanges": [],
+      "resources": [],
+      "modelAttempts": [
+        {
+          "passed": false,
+          "elapsedMs": 335,
+          "error": "[object Event]",
+          "closed": false
+        }
+      ]
+    },
+    "summary": {
+      "automatedPassed": false,
+      "productionRecommendation": "NO-GO: physical camera and genuine nonproduction educational acceptance require review",
+      "physicalCameraVerified": false,
+      "expoCommit": "07f4e1fe9ade229efdaf3bfc4b026cba917801b6",
+      "recordsVerified": 0,
+      "boundarySamplesVerified": 0,
+      "transitionsVerified": 0,
+      "modelInitialized": false,
+      "originalModelComparison": {
+        "verified": false,
+        "sameBytes": null,
+        "sources": {
+          "pinned": {
+            "url": "https://storage.googleapis.com/mediapipe-models/gesture_recognizer/gesture_recognizer/float16/1/gesture_recognizer.task",
+            "error": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+          },
+          "prototype": {
+            "url": "https://storage.googleapis.com/mediapipe-tasks/gesture_recognizer/gesture_recognizer.task",
+            "error": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+          }
+        },
+        "requiresPhysicalComparison": true,
+        "modelVersionUnchanged": true
+      },
+      "originalModelStatus": "unverified"
+    }
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "scope": "Genuine NONPRODUCTION accounts only; never the automated fixture account",
+  "nonproductionEnvironment": "NOT PROVIDED",
+  "reviewerAlias": "",
+  "reviewedAt": "",
+  "browserAndVersion": "",
+  "realStudentDataUsed": false,
+  "results": {
+    "initialMissionLocking": "not-tested",
+    "studentMissionSubmission": "not-tested",
+    "teacherRejectionAndResubmission": "not-tested",
+    "teacherVerification": "not-tested",
+    "exactlyOncePointsAndStamp": "not-tested",
+    "nextMissionUnlocking": "not-tested",
+    "completedChapterRevisit": "not-tested",
+    "allSevenMissionBindingsAndOrder": "not-tested",
+    "passportAndStampRestoration": "not-tested",
+    "refreshAndSessionRestoration": "not-tested",
+    "profileIsolation": "not-tested",
+    "projectsUnaffectedAndNoGameCamera": "not-tested"
+  },
+  "recommendation": "NO-GO until completed and independently reviewed"
+}
