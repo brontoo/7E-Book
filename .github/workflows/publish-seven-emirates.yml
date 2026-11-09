@@ -26,14 +26,43 @@ jobs:
       SEVEN_EMIRATES_SUPABASE_URL: https://hjqyhybgitdizfhwpdcv.supabase.co
       SEVEN_EMIRATES_BUCKET: seven-emirates-game
     steps:
-      - name: Check out the reviewed Expo integration branch
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-        with:
-          repository: brontoo/tomorrows-earth-expo
-          ref: integration/seven-emirates-frame-engine
-          path: expo
-          persist-credentials: false
-          token: ${{ secrets.EXPO_REPOSITORY_READ_TOKEN || github.token }}
+      - name: Check out the reviewed Expo integration branch without submodules
+        env:
+          EXPO_CHECKOUT_TOKEN: ${{ secrets.EXPO_REPOSITORY_READ_TOKEN || github.token }}
+        run: |
+          python3 - <<'PY_CHECKOUT'
+          import base64, os, subprocess
+          from pathlib import Path
+
+          def git(*args, env=None):
+              subprocess.run(['git', *args], check=True, env=env)
+
+          git('init', 'expo')
+          git('-C', 'expo', 'remote', 'add', 'origin', 'https://github.com/brontoo/tomorrows-earth-expo.git')
+          # Cone mode includes root package/config files and all required trees.
+          git('-C', 'expo', 'sparse-checkout', 'set', '--cone',
+              'api', 'client', 'docs', 'drizzle', 'media', 'patches', 'scripts', 'server', 'shared')
+          # Equivalent to persist-credentials:false: authentication exists only
+          # in the fetch process environment, never in a URL or Git config file.
+          fetch_env = os.environ.copy()
+          authorization = base64.b64encode(('x-access-token:' + fetch_env.pop('EXPO_CHECKOUT_TOKEN')).encode()).decode()
+          fetch_env.update(GIT_TERMINAL_PROMPT='0', GIT_CONFIG_COUNT='1',
+                           GIT_CONFIG_KEY_0='http.https://github.com/.extraheader',
+                           GIT_CONFIG_VALUE_0='AUTHORIZATION: basic ' + authorization)
+          git('-C', 'expo', '-c', 'submodule.recurse=false', 'fetch',
+              '--no-recurse-submodules', '--depth=1', 'origin',
+              'refs/heads/integration/seven-emirates-frame-engine', env=fetch_env)
+          git('-C', 'expo', '-c', 'submodule.recurse=false', 'checkout',
+              '--no-recurse-submodules', '--detach', 'FETCH_HEAD')
+          # actions/checkout's auth cleanup runs recursive submodule foreach even
+          # with submodules:false. Cone mode alone retains this root gitlink.
+          # Use nonrecursive Git instead; omit only its EMPTY runner-local stub.
+          # rmdir refuses any content. The committed gitlink remains untouched.
+          stub = Path('expo/everything-claude-code')
+          if stub.exists():
+              stub.rmdir()
+          git('-C', 'expo', 'update-index', '--skip-worktree', '--', 'everything-claude-code')
+          PY_CHECKOUT
 
       - name: Refuse an unexpected publisher revision
         run: |
@@ -51,6 +80,7 @@ jobs:
           repository: brontoo/7E-Book
           ref: ${{ env.SOURCE_COMMIT }}
           path: source
+          submodules: false
           persist-credentials: false
 
       - name: Set up Python
